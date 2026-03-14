@@ -258,13 +258,13 @@ class XiaohongshuUploader:
         :return: 点击成功返回 True，否则 False
         """
         try:
-            publish_btn = self.page.locator("button.d-button.bg-red").filter(has_text="发布")
+            publish_btn = self.page.get_by_role("button", name="发布", exact=True)
             publish_btn.wait_for(state="visible", timeout=5000)
             with self.page.expect_response(
                 lambda response: PUBLISH_API_URL_KEYWORD in response.url and response.request.method == "POST",
                 timeout=15000,
             ) as response_info:
-                publish_btn.click()
+                publish_btn.click(force=True)
             response = response_info.value
             print("[√] 已点击发布按钮")
             return self.parse_publish_response(response)

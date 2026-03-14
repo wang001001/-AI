@@ -4,6 +4,7 @@ from typing import TypedDict, List
 class AgentState(TypedDict):
     # 输入
     input: str
+    image_count: int
     # 生成小红书标题和正文
     xiaohongshu_tcm_post_title: str
     xiaohongshu_tcm_post_content: str

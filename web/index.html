@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -14,9 +14,9 @@
     <main class="layout">
       <section class="hero-card">
         <p class="eyebrow">Xiaohongshu Auto Publisher</p>
-        <h1>输入一个主题，自动生成文案、配图并发布到小红书</h1>
+        <h1>一句主题，生成多图图文并自动发布到小红书</h1>
         <p class="hero-copy">
-          首次使用会在本机弹出浏览器，请完成小红书登录。登录态保存后，后续可以直接一键发布。
+          现在支持用户直接指定要生成几张图。你输入主题和图片数量后，系统会自动生成文案、批量配图，并在浏览器中完成真实发布。
         </p>
 
         <div class="chip-row">
@@ -30,7 +30,7 @@
         <div class="workspace-header">
           <div>
             <p class="section-kicker">发布面板</p>
-            <h2>主题输入</h2>
+            <h2>主题与图片数量</h2>
           </div>
           <div class="status-pill" id="health-pill">环境检查中</div>
         </div>
@@ -43,6 +43,14 @@
             rows="6"
             placeholder="例如：请发一个关于TK跨境电商的小红书"
           ></textarea>
+
+          <div class="field-row">
+            <div class="field-group field-group-small">
+              <label class="field-label" for="image-count-input">图片数量</label>
+              <input id="image-count-input" name="image_count" type="number" min="1" max="5" value="3" />
+              <p class="field-help">支持 1 到 5 张图，发布时会按你填写的数量生成。</p>
+            </div>
+          </div>
 
           <div class="form-footer">
             <p class="hint">
@@ -65,9 +73,9 @@
           <div class="result-badge" id="result-badge">等待任务</div>
         </div>
 
-        <p class="timeline" id="timeline-text">页面已就绪，输入主题后即可开始。</p>
+        <p class="timeline" id="timeline-text">页面已就绪，输入主题与图片数量后即可开始。</p>
 
-        <div class="result-grid">
+        <div class="result-grid result-grid-four">
           <article class="metric-panel">
             <span class="metric-label">发布状态</span>
             <strong class="metric-value" id="result-status">尚未开始</strong>
@@ -80,6 +88,10 @@
             <span class="metric-label">地点</span>
             <strong class="metric-value" id="result-site">-</strong>
           </article>
+          <article class="metric-panel">
+            <span class="metric-label">图片数量</span>
+            <strong class="metric-value" id="result-image-count">-</strong>
+          </article>
         </div>
 
         <div class="content-panel">
@@ -87,11 +99,12 @@
             <h3>生成文案</h3>
             <p id="result-content">提交任务后，这里会展示生成出来的小红书正文。</p>
           </div>
-          <div class="image-panel">
-            <div class="image-frame">
+          <div class="image-panel image-panel-stack">
+            <div class="image-frame image-frame-large">
               <img id="result-image" alt="生成配图预览" hidden />
               <div class="image-placeholder" id="image-placeholder">等待生成配图</div>
             </div>
+            <div class="image-gallery" id="image-gallery"></div>
           </div>
         </div>
       </section>

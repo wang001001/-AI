@@ -31,17 +31,22 @@ def generate_jimeng_prompt(title: str, content: str, site: str) -> str:
     )
 
 
-def xiaohongshu_image_generator(title, content, site):
-    # 生成提示词
-    prompt = generate_jimeng_prompt(title, content, site)
-
+def xiaohongshu_image_generator(title, content, site, image_count: int):
     # 建了一个文件夹，用于保存图片
     os.makedirs(get_file_path("picture"), exist_ok=True)
-    file_name = sanitize_title_for_filename(title)
-    output_path = os.path.join(get_file_path("picture"), file_name)
 
-    # 生成图片并且下载
-    return generate_and_download_image(prompt, output_path)
+    image_paths = []
+    for index in range(image_count):
+        prompt = (
+            f"{generate_jimeng_prompt(title, content, site)}"
+            f" 第 {index + 1} 张图请使用不同的构图、主体位置或景别，保持同主题一致性。"
+        )
+        file_name = sanitize_title_for_filename(f"{title}_{index + 1}")
+        output_path = os.path.join(get_file_path("picture"), file_name)
+        image_path = generate_and_download_image(prompt, output_path)
+        if image_path:
+            image_paths.append(image_path)
+    return image_paths
 
 def image_generate_node(state: AgentState):
     """根据标题和内容生成中医养生风格的小红书配图"""
@@ -50,12 +55,13 @@ def image_generate_node(state: AgentState):
         title = state.get('xiaohongshu_tcm_post_title')
         content = state.get('xiaohongshu_tcm_post_content')
         site = state.get('xiaohongshu_tcm_post_site')
+        image_count = max(1, min(int(state.get('image_count', 1) or 1), 5))
 
-        image_path = xiaohongshu_image_generator(title, content, site)
+        image_paths = xiaohongshu_image_generator(title, content, site, image_count)
 
-        if image_path:
-            state['xiaohongshu_tcm_post_image_path_list'] = [image_path]
-            print(f"图片生成成功: {image_path}")
+        if image_paths:
+            state['xiaohongshu_tcm_post_image_path_list'] = image_paths
+            print(f"图片生成成功，共 {len(image_paths)} 张")
             print("完成生成小红书图片生成")
         else:
             state['xiaohongshu_tcm_post_image_path_list'] = []

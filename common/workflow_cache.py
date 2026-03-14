@@ -17,8 +17,8 @@ def _normalize_text(user_input: str) -> str:
     return " ".join(user_input.strip().split())
 
 
-def _cache_key(user_input: str) -> str:
-    normalized = _normalize_text(user_input)
+def _cache_key(user_input: str, image_count: int = 1) -> str:
+    normalized = f"{_normalize_text(user_input)}||images={image_count}"
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
@@ -36,8 +36,8 @@ def _write_cache(cache_data: dict):
     CACHE_FILE.write_text(json.dumps(cache_data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def get_cached_generation(user_input: str) -> dict | None:
-    key = _cache_key(user_input)
+def get_cached_generation(user_input: str, image_count: int = 1) -> dict | None:
+    key = _cache_key(user_input, image_count=image_count)
     with CACHE_LOCK:
         cache_data = _load_cache()
         payload = cache_data.get(key)
@@ -66,9 +66,10 @@ def save_cached_generation(user_input: str, state: dict):
     if not state.get("xiaohongshu_tcm_post_image_path_list"):
         return
 
-    key = _cache_key(user_input)
+    key = _cache_key(user_input, image_count=state.get("image_count", 1))
     payload = {
         "created_at": time.time(),
+        "image_count": state.get("image_count", 1),
         "xiaohongshu_tcm_post_title": state.get("xiaohongshu_tcm_post_title", ""),
         "xiaohongshu_tcm_post_content": state.get("xiaohongshu_tcm_post_content", ""),
         "xiaohongshu_tcm_post_site": state.get("xiaohongshu_tcm_post_site", ""),

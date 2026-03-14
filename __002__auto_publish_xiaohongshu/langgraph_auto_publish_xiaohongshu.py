@@ -68,6 +68,7 @@ def export_graph_image():
 def parse_args():
     parser = argparse.ArgumentParser(description="输入主题文本后，自动生成小红书文案、图片并发布。")
     parser.add_argument("text", nargs="*", help="想发布的小红书主题文本。")
+    parser.add_argument("--image-count", type=int, default=1, help="要生成并发布的图片数量。")
     return parser.parse_args()
 
 
@@ -78,7 +79,7 @@ def configure_stdio():
             stream.reconfigure(encoding="utf-8")
 
 
-def resolve_user_input() -> str:
+def resolve_user_input() -> tuple[str, int]:
     args = parse_args()
     if args.text:
         user_input = " ".join(args.text).strip()
@@ -86,15 +87,17 @@ def resolve_user_input() -> str:
         user_input = input("请输入想发布的小红书主题：").strip()
     if not user_input:
         raise ValueError("输入内容不能为空。")
-    return user_input
+    image_count = max(1, min(args.image_count, 5))
+    return user_input, image_count
 
 
-def run_workflow_sequential(user_input: str):
-    cached_generation = get_cached_generation(user_input)
+def run_workflow_sequential(user_input: str, image_count: int = 1):
+    cached_generation = get_cached_generation(user_input, image_count=image_count)
     if cached_generation:
         print("命中文案与图片缓存，跳过重新生成。")
         state: AgentState = {
             "input": user_input,
+            "image_count": cached_generation.get("image_count", image_count),
             "xiaohongshu_tcm_post_title": cached_generation.get("xiaohongshu_tcm_post_title", ""),
             "xiaohongshu_tcm_post_content": cached_generation.get("xiaohongshu_tcm_post_content", ""),
             "xiaohongshu_tcm_post_site": cached_generation.get("xiaohongshu_tcm_post_site", ""),
@@ -103,7 +106,7 @@ def run_workflow_sequential(user_input: str):
         }
         state = check_text_image_node(state)
     else:
-        state: AgentState = {"input": user_input, "used_cache": False}
+        state: AgentState = {"input": user_input, "image_count": image_count, "used_cache": False}
         for node in (
             text_generate_node,
             image_generate_node,
@@ -123,6 +126,10 @@ def run_workflow(user_input: str):
     return run_workflow_sequential(user_input)
 
 
+def run_workflow_with_options(user_input: str, image_count: int = 1):
+    return run_workflow_sequential(user_input, image_count=image_count)
+
+
 def print_run_summary(result):
     print("\n运行结果摘要")
     print(f"标题: {result.get('xiaohongshu_tcm_post_title', '')}")
@@ -135,8 +142,8 @@ if __name__ == "__main__":
     configure_stdio()
     export_graph_image()
     try:
-        user_input = resolve_user_input()
-        result = run_workflow(user_input)
+        user_input, image_count = resolve_user_input()
+        result = run_workflow_sequential(user_input, image_count=image_count)
         print_run_summary(result)
     except KeyboardInterrupt:
         print("\n已取消本次运行。")
