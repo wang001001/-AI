@@ -12,6 +12,10 @@ class AgentState(TypedDict):
     xiaohongshu_tcm_post_image_path_list: List[str]
     # 是否可以发布小红书
     is_can_publish_xiaohongshu: bool
+    # 是否检测到真正发布成功
+    publish_success: bool
+    # 是否复用了缓存素材
+    used_cache: bool
     # 输出
     output: str
 

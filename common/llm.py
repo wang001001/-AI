@@ -5,9 +5,9 @@ conf = Config()
 
 # ============ 配置llm区域 ============
 my_llm = ChatOpenAI(
-    api_key=conf.MODEL_API_KEY,
-    base_url=conf.MODEL_BASE_URL,
-    model=conf.MODEL_NAME
+    api_key=conf.DEEPSEEK_API_KEY or conf.MODEL_API_KEY,
+    base_url=conf.DEEPSEEK_BASE_URL or conf.MODEL_BASE_URL,
+    model=conf.DEEPSEEK_MODEL or conf.MODEL_NAME
 )
 
 if __name__ == '__main__':

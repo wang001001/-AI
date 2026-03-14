@@ -77,5 +77,5 @@ def extract_cookies(url: str, output_file: str = "cookies.json", headless: bool 
             browser.close()
 
 
-# 使用
-extract_cookies("https://www.xiaohongshu.com/explore", headless=False)  # 首次建议 headless=False 手动登录
+if __name__ == "__main__":
+    extract_cookies("https://www.xiaohongshu.com/explore", headless=False)  # 首次建议 headless=False 手动登录

@@ -9,7 +9,7 @@ from common.path_utils import get_file_path
 conf = Config()
 
 # 以下为北京地域url，若使用新加坡地域的模型，需将url替换为：https://dashscope-intl.aliyuncs.com/api/v1
-dashscope.base_http_api_url = "https://dashscope.aliyuncs.com/api/v1"
+dashscope.base_http_api_url = conf.DASHSCOPE_BASE_URL
 
 # 默认负面提示，用于提升画质
 DEFAULT_NEGATIVE_PROMPT = (
@@ -33,12 +33,12 @@ def generate_and_download_image(
     :param save_path: 图片保存路径，可为相对路径或绝对路径，内部会转为绝对路径后保存
     :param size: 图片尺寸，默认 1024*1024
     :param negative_prompt: 负面提示词，用于避免低质量元素
-    :param api_key: API Key，不传则使用 Config 中的 MODEL_API_KEY
+    :param api_key: API Key，不传则使用 Config 中的 QWEN_API_KEY
     :return: 成功返回保存的绝对路径，失败返回 None
     """
-    key = api_key or conf.MODEL_API_KEY
+    key = api_key or conf.QWEN_API_KEY
     if not key:
-        print("错误：未配置 MODEL_API_KEY")
+        print("错误：未配置 QWEN_API_KEY")
         return None
 
     messages = [

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小红书自动发布台</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <div class="ambient ambient-left"></div>
+    <div class="ambient ambient-right"></div>
+
+    <main class="layout">
+      <section class="hero-card">
+        <p class="eyebrow">Xiaohongshu Auto Publisher</p>
+        <h1>输入一个主题，自动生成文案、配图并发布到小红书</h1>
+        <p class="hero-copy">
+          首次使用会在本机弹出浏览器，请完成小红书登录。登录态保存后，后续可以直接一键发布。
+        </p>
+
+        <div class="chip-row">
+          <button class="chip" type="button" data-prompt="请发一个关于TK跨境电商的小红书">TK跨境电商</button>
+          <button class="chip" type="button" data-prompt="请发一个关于春季露营装备的小红书">春季露营装备</button>
+          <button class="chip" type="button" data-prompt="请发一个关于杭州周末咖啡店巡游的小红书">杭州咖啡巡游</button>
+        </div>
+      </section>
+
+      <section class="workspace-card">
+        <div class="workspace-header">
+          <div>
+            <p class="section-kicker">发布面板</p>
+            <h2>主题输入</h2>
+          </div>
+          <div class="status-pill" id="health-pill">环境检查中</div>
+        </div>
+
+        <form id="publish-form" class="publish-form">
+          <label class="field-label" for="prompt-input">小红书主题</label>
+          <textarea
+            id="prompt-input"
+            name="text"
+            rows="6"
+            placeholder="例如：请发一个关于TK跨境电商的小红书"
+          ></textarea>
+
+          <div class="form-footer">
+            <p class="hint">
+              点击后会直接触发真实发布流程。请确保当前机器可以打开浏览器，并且小红书账号可登录。
+            </p>
+            <button id="submit-button" class="submit-button" type="submit">
+              <span class="button-text">立即发布</span>
+              <span class="button-spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="result-card" id="result-card">
+        <div class="result-header">
+          <div>
+            <p class="section-kicker">执行结果</p>
+            <h2>运行回显</h2>
+          </div>
+          <div class="result-badge" id="result-badge">等待任务</div>
+        </div>
+
+        <p class="timeline" id="timeline-text">页面已就绪，输入主题后即可开始。</p>
+
+        <div class="result-grid">
+          <article class="metric-panel">
+            <span class="metric-label">发布状态</span>
+            <strong class="metric-value" id="result-status">尚未开始</strong>
+          </article>
+          <article class="metric-panel">
+            <span class="metric-label">标题</span>
+            <strong class="metric-value" id="result-title">-</strong>
+          </article>
+          <article class="metric-panel">
+            <span class="metric-label">地点</span>
+            <strong class="metric-value" id="result-site">-</strong>
+          </article>
+        </div>
+
+        <div class="content-panel">
+          <div class="content-copy">
+            <h3>生成文案</h3>
+            <p id="result-content">提交任务后，这里会展示生成出来的小红书正文。</p>
+          </div>
+          <div class="image-panel">
+            <div class="image-frame">
+              <img id="result-image" alt="生成配图预览" hidden />
+              <div class="image-placeholder" id="image-placeholder">等待生成配图</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

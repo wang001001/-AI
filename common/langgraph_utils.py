@@ -1,7 +1,7 @@
-from langgraph.graph.state import CompiledStateGraph
+from typing import Any
 
 
-def output_pic_graph(graph: CompiledStateGraph, filename: str = "graph.jpg"):
+def output_pic_graph(graph: Any, filename: str = "graph.jpg"):
     try:
         mermaid_code = graph.get_graph().draw_mermaid_png()
         with open(filename, 'wb') as f:

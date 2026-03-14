@@ -20,16 +20,14 @@ def sanitize_title_for_filename(title: str) -> str:
     return time_str + title[:5] + ".png"
 
 def generate_jimeng_prompt(title: str, content: str, site: str) -> str:
+    content_summary = (content or "")[:120]
     return (
-        f"一幅围绕旅行探索主题创作的高质量图像，"
-        f"画面展现与标题内容相关的旅行场景，如自然风光、城市街景、异国风情或户外探险，"
-        f"构图中可以包含人物、交通工具、建筑或自然景观，"
-        f"整体氛围充满冒险、自由与美好假期的感觉，色调明亮或富有层次，"
-        f"背景可以是山川、海滩、森林、古城、夜景等，"
-        f"表达放松、探索、享受生活的情绪。"
-        f"图片描述地址为:{site}。"
-        f"图片中不能有任何文字。"
-        f"允许写实艺术风格，但需保证画面和谐美观、细节丰富。"
+        f"请生成一张适合小红书图文封面的高质量图片。"
+        f"主题：{title}。"
+        f"核心内容：{content_summary}。"
+        f"场景或地点：{site or '无明确地点'}。"
+        f"要求：主体明确，风格贴合主题，构图简洁，画面干净高级，适合社交媒体封面。"
+        f"图片中不能有任何文字、水印或 Logo。"
     )
 
 
@@ -43,8 +41,7 @@ def xiaohongshu_image_generator(title, content, site):
     output_path = os.path.join(get_file_path("picture"), file_name)
 
     # 生成图片并且下载
-    generate_and_download_image(prompt, output_path)
-    return output_path
+    return generate_and_download_image(prompt, output_path)
 
 def image_generate_node(state: AgentState):
     """根据标题和内容生成中医养生风格的小红书配图"""
@@ -56,12 +53,19 @@ def image_generate_node(state: AgentState):
 
         image_path = xiaohongshu_image_generator(title, content, site)
 
-        state['xiaohongshu_tcm_post_image_path_list'] = [image_path]
-        print(f"图片生成成功: {image_path}")
-        print("完成生成小红书图片生成")
+        if image_path:
+            state['xiaohongshu_tcm_post_image_path_list'] = [image_path]
+            print(f"图片生成成功: {image_path}")
+            print("完成生成小红书图片生成")
+        else:
+            state['xiaohongshu_tcm_post_image_path_list'] = []
+            state['output'] = "图片生成失败"
+            print("图片生成失败")
     except Exception as e:
         import traceback
         traceback.print_exc()
+        state['xiaohongshu_tcm_post_image_path_list'] = []
+        state['output'] = f"图片生成异常: {e}"
     return state
 
 if __name__ == '__main__':

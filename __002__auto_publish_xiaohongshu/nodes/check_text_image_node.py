@@ -18,8 +18,15 @@ def check_text_image_node(state: AgentState):
     if not image_path_list:
         state["is_can_publish_xiaohongshu"] = False
         state["output"] = "发布小红书失败，图片缺失！"
+        return state
+    if len(title) > 20:
+        state["is_can_publish_xiaohongshu"] = False
+        state["output"] = "发布小红书失败，标题超过 20 个字符！"
+    if len(content) > 1000:
+        state["is_can_publish_xiaohongshu"] = False
+        state["output"] = "发布小红书失败，正文超过 1000 个字符！"
     image_path = image_path_list[0]
-    if not os.path.exists(image_path):
+    if not image_path or not os.path.exists(image_path):
         state["is_can_publish_xiaohongshu"] = False
         state["output"] = "发布小红书失败，图片不存在！"
     return state
