@@ -1,218 +1,301 @@
-# 🚀 自动化小红书发布
+# 小红书自动发布项目
 
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.2.0+-green.svg)](https://langchain-ai.github.io/langgraph/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Web%20UI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Playwright](https://img.shields.io/badge/Playwright-Automation-cyan.svg)](https://playwright.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Playwright](https://img.shields.io/badge/Playwright-1.40+-cyan.svg)](https://playwright.dev/)
 
-**基于 LangGraph 的小红书自动化发布工作流**
+输入主题文本，自动生成小红书文案、配图，并通过浏览器自动发布。
 
 </div>
 
----
+## 项目简介
 
-## 📋 目录
+这是一个面向小红书图文发布的自动化项目，当前已经支持：
 
-- [项目概述](#-项目概述)
-- [文件结构](#-文件结构)
-- [环境依赖](#-环境依赖)
-- [核心功能](#-核心功能)
-- [使用方法](#-使用方法)
-- [常见问题](#-常见问题)
+- 前端页面输入主题文本
+- 后端自动调用大模型生成小红书文案
+- 自动调用图片模型生成配图
+- 自动打开小红书创作页并上传图文
+- 首次登录后复用本地登录态
+- 同一主题短时间内复用缓存文案和图片，减少重复生成耗时
 
----
+项目目前的默认模型组合是：
 
-## 📖 项目概述
+- 文案生成：DeepSeek
+- 图片生成：Qwen
+- 自动发布：Playwright 驱动小红书创作页
 
-本项目展示了如何基于 **LangGraph**（LangChain 的状态图工作流框架）构建一个完整的**小红书自动化发布系统**。
+## 当前能力
 
-### 核心功能
+### 1. 前端输入发布
 
-| 功能 | 描述 | 关键技术 |
-|------|------|----------|
-| 🎨 **智能文案生成** | 根据用户需求自动生成小红书风格的标题和正文 | LLM、Pydantic 结构化输出 |
-| 🖼️ **配图生成** | 根据文案内容生成匹配的配图 | 图片生成 API 集成 |
-| ✅ **内容审核** | 检查文案长度、敏感词、图片尺寸等 | 规则引擎 |
-| 📤 **自动发布** | 条件分支发布，审核通过后自动发布 | 自动化 API |
+项目新增了一个网页入口，用户打开页面后，只需要输入主题文本并点击按钮，就会触发整条发布流程。
 
-### 工作流图
+页面会展示：
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  text_generate  │───▶│ image_generate  │───▶│ check_control  │
-│    (生成文案)    │    │    (生成配图)    │    │    (内容审核)    │
-└─────────────────┘    └─────────────────┘    └────────┬────────┘
-                                                        │
-                              ┌─────────────────────────┼─────────────────────────┐
-                              │                         │                         │
-                              ▼                         ▼                         ▼
-                    ┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
-                    │ auto_publish   │        │      END       │        │      END       │
-                    │   (发布笔记)    │        │   (审核失败)    │        │   (用户终止)    │
-                    └─────────────────┘        └─────────────────┘        └─────────────────┘
-```
+- 当前是否已有小红书登录态
+- 执行中状态
+- 生成后的标题、正文、地点
+- 配图预览
+- 发布结果
 
----
+### 2. 文案生成
 
-## 📂 文件结构
+文案节点会根据输入主题生成：
 
-```
+- 标题
+- 正文
+- 场景或地点
+
+当前 prompt 已改成更通用的小红书图文风格，不再只适配旅行内容。
+
+### 3. 图片生成
+
+图片节点会根据文案主题、正文摘要和场景生成适合做小红书封面的图片。
+
+### 4. 自动发布
+
+发布节点会：
+
+- 打开小红书创作页
+- 检测或复用登录态
+- 上传图片
+- 填充标题和正文
+- 等待图片上传稳定后再点击发布
+- 等待真正的发布接口响应，而不是只看页面文案
+
+### 5. 缓存提速
+
+对于相同输入，项目会缓存最近一次生成的文案和图片。
+
+这样在短时间内重复发布同一个主题时，可以跳过最慢的两步：
+
+- 文案生成
+- 图片生成
+
+## 项目结构
+
+```text
 .
-├── __000__demo/                              # 基础示例
-│   ├── langchain_outputparser_demo.py       # OutputParser 示例
-│   └── tongyi_picture.py                     # 通义万相图片生成
-│
-├── __001__langgraph_translate_demo/          # 翻译工作流（学习参考）
-│   ├── langgraph_translate.py                # 翻译实现
-│   └── langgraph_translate.png               # 工作流图
-│
-├── __002__auto_publish_xiaohhongshu/         # ⭐ 小红书自动发布核心
-│   ├── agent_state.py                        # 状态模型定义
-│   ├── langgraph_auto_publish_xiaohongshu.py # 主工作流入口
+├── __000__demo/                              # 早期示例代码
+├── __001__langgraph_translate_demo/          # LangGraph 学习示例
+├── __002__auto_publish_xiaohongshu/          # 小红书自动发布核心流程
+│   ├── agent_state.py
+│   ├── langgraph_auto_publish_xiaohongshu.py
 │   └── nodes/
-│       ├── text_generate_node.py             # 文案生成节点
-│       ├── image_generate_node.py            # 图片生成节点
-│       ├── check_text_image_node.py          # 内容审核节点
-│       └── auto_publish_xiaohongshu_node.py  # 发布节点
-│
-├── common/                                    # 公共工具
-│   ├── config.py                             # 配置
-│   ├── llm.py                                # LLM 封装
-│   ├── langgraph_utils.py                    # LangGraph 工具
-│   ├── image_generate_utils.py               # 图片生成工具
-│   └── path_utils.py                         # 路径工具
-│
-├── picture/                                   # 生成图片目录
-├── cookie/                                    # Cookie 存储目录
-├── test.py                                    # Playwright 抓取测试
-├── requirements.txt                           # 依赖
-└── .env                                       # 环境变量
+│       ├── text_generate_node.py
+│       ├── image_generate_node.py
+│       ├── check_text_image_node.py
+│       └── auto_publish_xiaohongshu_node.py
+├── common/                                   # 公共配置、模型和缓存工具
+│   ├── config.py
+│   ├── llm.py
+│   ├── image_generate_utils.py
+│   ├── workflow_cache.py
+│   ├── langgraph_utils.py
+│   └── path_utils.py
+├── web/                                      # 前端页面
+│   ├── index.html
+│   └── assets/
+│       ├── app.js
+│       └── styles.css
+├── webapp.py                                 # FastAPI 服务入口
+├── start_web.ps1                             # 一键启动脚本
+├── picture/                                  # 生成图片目录
+├── cookie/                                   # 登录态和工作流缓存
+├── test.py                                   # Playwright 调试脚本
+├── requirements.txt
+└── .env.example
 ```
 
----
+## 环境准备
 
-## 🛠️ 环境依赖
+### 1. Python
+
+建议使用 Python 3.10 及以上版本。
+
+### 2. 安装依赖
 
 ```bash
-# Python 3.10+
 pip install -r requirements.txt
-
-# 安装 Playwright 浏览器
-playwright install
 ```
 
-### requirements.txt
+### 3. 安装 Playwright 浏览器
 
-```
-playwright
-langchain
-langchain-openai
-langgraph
-pydantic
-python-dotenv
+```bash
+playwright install chromium
 ```
 
----
+## 配置方式
 
-## ⚡ 核心功能
+项目使用仓库根目录下的 `.env` 配置文件。
 
-### 1. 文案生成 (`text_generate_node`)
-
-接收用户需求，调用 LLM 生成结构化文案：
-
-```python
-# 输入
-{"input": "发个小红书，关于河南信阳的美食"}
-
-# 输出
-{
-    "title": "信阳美食天花板！本地人私藏的必吃清单🍜",
-    "content": "姐妹们！今天必须给你们分享信阳的宝藏美食...",
-    "location": "河南信阳"
-}
-```
-
-### 2. 图片生成 (`image_generate_node`)
-
-根据文案内容生成匹配的配图（可接入 DALL·E、Stable Diffusion 等）。
-
-### 3. 内容审核 (`check_text_image_node`)
-
-检查是否符合发布规则：
-- 文案长度（标题 20 字以内，正文 1000 字以内）
-- 敏感词检测
-- 图片尺寸要求
-
-### 4. 自动发布 (`auto_publish_xiaohongshu_node`)
-
-审核通过后自动调用发布 API。
-
----
-
-## 🚦 使用方法
-
-### 1. 配置环境变量
-
-在 `.env` 文件中配置：
+你可以先参考 [.env.example](/D:/My_preprodict/codex_myOnePreproject/.env.example)：
 
 ```env
-OPENAI_API_KEY=your_api_key
-ANTHROPIC_API_KEY=your_api_key
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+DEEPSEEK_MODEL=deepseek-chat
+
+QWEN_API_KEY=your_qwen_api_key
+QWEN_IMAGE_MODEL=qwen-image-2.0-pro
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
 ```
 
-或在 `common/llm.py` 中直接配置。
+可选配置：
 
-### 2. 运行示例
+```env
+QWEN_IMAGE_SIZE=1024*1024
+QWEN_PROMPT_EXTEND=false
+```
+
+## 使用方式
+
+### 方式一：启动前端页面
+
+PowerShell：
+
+```powershell
+.\start_web.ps1
+```
+
+或者：
+
+```powershell
+D:\AnaConda\python.exe -m uvicorn webapp:app --host 127.0.0.1 --port 8000 --reload
+```
+
+启动后打开：
+
+[http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+然后在页面中输入主题文本，例如：
+
+```text
+请发一个关于TK跨境电商的小红书
+```
+
+### 方式二：命令行直接运行
 
 ```bash
-# 小红书自动发布
-python __002__auto_publish_xiaohongshu/langgraph_auto_publish_xiaohongshu.py
-
-# 翻译工作流（参考）
-python __001__langgraph_translate_demo/langgraph_translate.py
-
-# 抓取 Cookies
-python test.py
+python __002__auto_publish_xiaohongshu/langgraph_auto_publish_xiaohongshu.py "请发一个关于TK跨境电商的小红书"
 ```
 
-### 3. 自定义扩展
+或者直接运行后手动输入：
 
-- 📝 修改 `text_generate_node` 的 Prompt 适配不同场景
-- 🖼️ 在 `image_generate_node` 接入真实图片生成模型
-- 📤 实现 `auto_publish_xiaohongshu_node` 的真实发布 API
+```bash
+python __002__auto_publish_xiaohongshu/langgraph_auto_publish_xiaohongshu.py
+```
 
----
+## 首次发布说明
 
-## ❓ 常见问题
+首次真实发布时，程序会打开浏览器并进入小红书创作页。
 
-| 问题 | 解决方案 |
-|------|----------|
-| 运行 `test.py` 报错找不到浏览器 | 执行 `playwright install` 安装浏览器 |
-| LLM 调用返回空 | 检查 API Key 是否有效 |
-| StateGraph 报错节点未注册 | 确认已在 `build_graph()` 中添加所有节点 |
-| 结构化输出解析失败 | 在 Prompt 中加入 "请严格遵守 JSON 格式" |
-| 图片生成节点报错 | 当前为占位实现，需接入真实 API |
+你需要：
 
----
+- 在浏览器中完成小红书登录
+- 等待页面自动继续
 
-## 🎯 项目目标
+登录态会保存到：
 
-- **自动化**：减少重复性工作，专注内容创意
-- **模块化**：基于 LangGraph 便于扩展新功能
-- **可定制**：轻松适配其他社交平台（微博、抖音等）
+```text
+cookie/xiaohongshu_state.json
+```
 
----
+后续发布会直接复用，不需要重复登录。
 
-## 📄 License
+## 项目发布流程
 
-MIT License
+当前默认顺序是：
 
----
+1. 输入主题文本
+2. 生成文案
+3. 生成图片
+4. 校验标题、正文、图片
+5. 打开小红书创作页
+6. 上传图片并填充图文
+7. 等待上传稳定后点击发布
+8. 检测真正的发布接口响应
 
-<div align="center">
+## 重要说明
 
-Made with ❤️ using LangGraph
+### 1. 页面“发布成功”现在如何判断
 
-</div>
+项目不再只根据页面上是否出现“成功”字样判断。
+
+现在会优先等待真正的发布接口响应，并解析接口返回结果，再决定是否真正发布成功。
+
+### 2. 为什么有时会感觉慢
+
+最耗时的步骤通常是：
+
+- 大模型生成文案
+- 图片模型生成图片
+- 小红书页面上传图片
+
+当前已经做了两类优化：
+
+- 同一主题 1 小时内复用缓存文案与图片
+- 发布前等待上传稳定，减少“过早点击导致失败后重试”
+
+### 3. 为什么仍然可能失败
+
+这是浏览器自动化项目，不是官方开放平台直连，所以仍然会受这些因素影响：
+
+- 小红书页面结构变化
+- 登录态失效
+- 图片仍在处理
+- 页面校验规则变化
+- 网络波动
+
+## 常见问题
+
+### 运行时报错找不到浏览器
+
+执行：
+
+```bash
+playwright install chromium
+```
+
+### 已点击发布，但账号里没有看到内容
+
+这通常说明：
+
+- 当时只是按钮点到了，但真正发布接口没有成功返回
+- 或者页面仍在处理图片
+
+当前版本已经增加：
+
+- 发布前等待素材稳定
+- 发布接口响应检测
+
+### 文案与主题不符
+
+请检查输入主题是否足够明确，例如：
+
+- 不推荐：`发一个小红书`
+- 推荐：`请发一个关于TK跨境电商新手入门的小红书`
+
+### 图片生成太慢
+
+可以尝试：
+
+- 复用相同主题发布，让缓存生效
+- 调整 `.env` 中的 `QWEN_IMAGE_SIZE`
+- 关闭 `QWEN_PROMPT_EXTEND`
+
+## 后续可继续扩展
+
+- 发布历史记录
+- 页面里显示是否命中缓存
+- 发布成功后二次校验笔记列表
+- 支持定时发布
+- 支持多平台发布
+
+## License
+
+MIT
