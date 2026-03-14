@@ -13,9 +13,6 @@
 
 </div>
 
-<div align="center">
-  <img src="./__002__auto_publish_xiaohongshu/langgraph_auto_publish_xiaohongshu.png" alt="workflow" width="780" />
-</div>
 
 ## Overview
 
